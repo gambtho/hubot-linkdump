@@ -1,29 +1,23 @@
 {
   "name": "hubot-linkdump",
   "description": "A hubot script for saving and viewing links",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "author": "gambtho <thomas_gamble@homedepot.com>",
   "license": "Apache-2.0",
-
   "keywords": "hubot, hubot-scripts, links, reading material",
-
   "repository": {
     "type": "git",
     "url": "git://github.com/gambtho/hubot-linkdump.git"
   },
-
   "bugs": {
     "url": "https://github.com/gambtho/hubot-linkdump/issues"
   },
-
   "dependencies": {
     "github-api": "^0.11.2"
   },
-
   "peerDependencies": {
     "hubot": "2.x"
   },
-
   "devDependencies": {
     "chai": "^3.4.1",
     "coffee-errors": "^0.8.6",
@@ -41,9 +35,7 @@
     "sinon": "^1.17.2",
     "sinon-chai": "^2.7.0"
   },
-
   "main": "index.coffee",
-
   "scripts": {
     "test": "grunt test"
   }
