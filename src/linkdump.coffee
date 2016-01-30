@@ -31,6 +31,8 @@ module.exports = (robot) ->
     URL: 0
     SUBMITTER: 1
     RATING: 2
+    REVIEWCOUNT: 3
+    IMAGE: 4
 
   TITLE_IMAGE = 'https://upload.wikimedia.org/wikipedia/commons/f/f8/AUTOMOBILE_JUNKYARD_ON_THE_NORTH_BANK_OF_THE_KANSAS_RIVER_BETWEEN_THE_12TH_AND_18TH_STREET_BRIDGES_-_NARA_-_552073.jpg'
 
@@ -38,7 +40,6 @@ module.exports = (robot) ->
   GITHUB_USER = process.env.HUBOT_GITHUB_USER
   GITHUB_REPO = process.env.HUBOT_GITHUB_LINK_REPO
   GITHUB_FILE = process.env.HUBOT_GITHUB_LINK_FILE
-
 
   robot.hear /linkdump initialize/i, (res) ->
     if robot.brain.get('linkdump')
@@ -102,7 +103,6 @@ module.exports = (robot) ->
       formatlinkInfo getLastlink(), "Added: ", (link, err) ->
 
         return emitString(res,"ADD ERROR - #{err}") if err
-
         robot.emit 'slack-attachment',
           channel: res.envelope.room
           content: link
@@ -153,7 +153,7 @@ module.exports = (robot) ->
       linkdump.map (link) ->
         fields.push
           title: "#{linkdump.indexOf(link)} - #{link[LINK.URL].value}"
-          value: "#{link[LINK.SUBMITTER].value}, #{link[LINK.RATING].value}"
+          value: "#{link[LINK.SUBMITTER].value}, #{link[LINK.RATING].value} stars"
 
       payload =
         title: "linkdump - #{getlinkdump().length} links"
@@ -184,12 +184,12 @@ module.exports = (robot) ->
 
     index = res.match[1]
 
-    newTitle = res.match[2]
+    newLink = res.match[2]
     maxIndex = getlinkdump().length - 1
     if index > maxIndex
       return emitString(res,"EDIT ERROR")
     else
-      addlink res, newTitle, rating, nbrOfRatings, index, (err) ->
+      addlink res, newLink, rating, nbrOfRatings, index, (err) ->
         return emitString(res,"EDIT ERROR - #{err}") if err
 
 
@@ -207,8 +207,8 @@ module.exports = (robot) ->
   getlinkdump = ->
     robot.brain.get('linkdump')
 
-  addlink = (msg, url, rating, nbrOfReviews, index, cb) ->
-    linkValidationQuery msg, url, (err) ->
+  addlink = (res, url, rating, nbrOfReviews, index, cb) ->
+    linkValidationQuery res, url, (err) ->
       return cb err if err
 
       user = "hubot"
@@ -226,11 +226,15 @@ module.exports = (robot) ->
 
       link.push
         key: "Average Rating"
-        value: avgRating
+        value: rating
 
       link.push
         key: "Number of Reviews"
         value: nbrOfReviews
+
+      link.push
+        key: "Image"
+        value: TITLE_IMAGE
 
       linkdump = getlinkdump()
       if index
@@ -288,9 +292,8 @@ module.exports = (robot) ->
     cb(payload, null)
 
   linkValidationQuery = (res, URL, cb) ->
-    res.http(URL)
+    res.http("#{URL}")
     .get() (err, resp, body) ->
-      if(err)
-        err = "Lookup Error - #{err}"
-      else
-        cb(null)
+      if err or not (resp.statusCode==200)
+        err = "Validation Error - error is " + err + " - status is - " + resp.statusCode
+      cb(err)
